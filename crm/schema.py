@@ -1,5 +1,7 @@
 import re
 import graphene
+
+from graphene_django.filter import DjangoFilterConnectionField
 from django.db import transaction
 from graphene_django.types import DjangoObjectType
 from .models import Customer, Product, Order
@@ -42,6 +44,32 @@ class CreateCustomer(graphene.Mutation):
 
         customer = Customer.objects.create(name=name, email=email, phone=phone)
         return CreateCustomer(customer=customer, message="Customer created successfully")
+
+class Query(graphene.ObjectType):
+    all_customers = DjangoFilterConnectionField(CustomerType, filterset_class=CustomerFilter, order_by=graphene.List(of_type=graphene.String))
+    all_products = DjangoFilterConnectionField(ProductType, filterset_class=ProductFilter, order_by=graphene.List(of_type=graphene.String))
+    all_orders = DjangoFilterConnectionField(OrderType, filterset_class=OrderFilter, order_by=graphene.List(of_type=graphene.String))
+
+    def resolve_all_customers(self, info, **kwargs):
+        qs = Customer.objects.all()
+        order_by = kwargs.pop('order_by', None)
+        if order_by:
+            qs = qs.order_by(*order_by)
+        return qs
+
+    def resolve_all_products(self, info, **kwargs):
+        qs = Product.objects.all()
+        order_by = kwargs.pop('order_by', None)
+        if order_by:
+            qs = qs.order_by(*order_by)
+        return qs
+
+def resolve_all_orders(self, info, **kwargs):
+        qs = Order.objects.all()
+        order_by = kwargs.pop('order_by', None)
+        if order_by:
+            qs = qs.order_by(*order_by)
+        return qs
 
 class Mutation(graphene.ObjectType):
     create_customer = CreateCustomer.Field()
