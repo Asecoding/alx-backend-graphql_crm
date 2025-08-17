@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     # Local apps
     'crm',
 ]
-]
 
 GRAPHENE = {
     "SCHEMA": "crm.schema.schema"  # Path to your GraphQL schema
