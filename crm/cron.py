@@ -23,3 +23,32 @@ def log_crm_heartbeat():
     except Exception as e:
         print(f"GraphQL health check error: {e}")
 
+def update_low_stock():
+    endpoint = "http://localhost:8000/graphql/"
+    query = """
+    mutation {
+      updateLowStockProducts {
+        updatedProducts {
+          name
+          stock
+        }
+        message
+      }
+    }
+    """
+
+    try:
+        response = requests.post(endpoint, json={'query': query})
+        data = response.json()
+        updates = data['data']['updateLowStockProducts']['updatedProducts']
+        message = data['data']['updateLowStockProducts']['message']
+
+        with open("/tmp/low_stock_updates_log.txt", "a") as log:
+            log.write(f"\n[{datetime.now()}] {message}\n")
+            for product in updates:
+                log.write(f"- {product['name']}: stock={product['stock']}\n")
+
+    except Exception as e:
+        with open("/tmp/low_stock_updates_log.txt", "a") as log:
+            log.write(f"\n[{datetime.now()}] ERROR: {str(e)}\n")
+
